@@ -3,9 +3,37 @@
 USES
   GraphABC, ABCObjects, Timers;
 
+const
+  Standart_Direction = -1;
+
 type
   Level = ARRAY[,] OF SquareABC;
   Blocks = array of SquareABC;
+  Enemy = class(PictureABC)
+  private
+    p: Picture;
+    sx, sy: real;
+    fMovePointL, fMovePointR, fdirection: integer;
+  public
+    
+    constructor Create(x, y, MovePointL, MovePointR: integer; fname: string);
+    begin
+      sx := x; 
+      sy := y;
+      p := Picture.Create(fname);
+      p.Transparent := False;
+      inherited Init(x, y, p.Width, p.Height, clBlack);
+      fMovePointL := MovePointL;
+      fMovePointR := MovePointR;
+      fdirection := Standart_Direction;
+      InternalDraw;
+    end;
+    
+    property MovePointL: integer read fMovePointL;
+    property MovePointR: integer read fMovePointR;
+    property direction: integer read fdirection;
+  end;
+  Enemies = array of Enemy;
 
 var
   Flag: BOOLEAN;
@@ -17,6 +45,8 @@ var
   gravity: integer;
   jumpForce: integer;
   speed: integer;
+  level1Enemies: Enemies;
+
 
 procedure CheckCollision();
 begin
@@ -52,7 +82,7 @@ begin
     end;
     
     if((Player.Left + Player.Width < x.Left) or (Player.Left > x.Left + x.Width)) and (OnGround = FALSE)
-    then
+      then
       gravity := 1;
   end;
 end;
@@ -70,9 +100,9 @@ begin
   if OnGround
   then
   begin
+    jumpForce := -20;
     velocityY := jumpForce;
     OnGround := false;
-    jumpForce := -20;
     gravity := 1;
     speed := 20;
   end;
@@ -120,6 +150,8 @@ begin
   speed := 5;
   gravity := 1;
   jumpForce := -20;
+  level1Enemies := new Enemy[3];
+  level1Enemies[0] := new Enemy(40 * 20, 40*19, 40*17, 40*22, 'images\enemy.png');
   var GameTimer := new Timer(5, GameTick);
   GameTimer.Start();
 end;
