@@ -9,29 +9,42 @@ const
 type
   Level = ARRAY[,] OF SquareABC;
   Blocks = array of SquareABC;
-  Enemy = class(PictureABC)
+  Enemy = class
   private
-    p: Picture;
-    sx, sy: real;
-    fMovePointL, fMovePointR, fdirection: integer;
-  public
+    fp: PictureABC;
+    fx, fy: integer;
+    fMovePointL, fMovePointR: integer;
+    fdirection: shortint;
+    pfname: string;
     
+    procedure setX(x: integer);
+    begin
+      fx := x;
+      fp.MoveTo(fx, fy);
+    end;
+    
+    procedure setDirection(value: shortint);
+    begin
+      fdirection := value;
+    end;
+    
+  public
     constructor Create(x, y, MovePointL, MovePointR: integer; fname: string);
     begin
-      sx := x; 
-      sy := y;
-      p := Picture.Create(fname);
-      p.Transparent := False;
-      inherited Init(x, y, p.Width, p.Height, clBlack);
+      fx := x;
+      fy := y;
+      fp := NEW PictureABC(fx, fy, fname);
+      fp.Transparent := False;
       fMovePointL := MovePointL;
       fMovePointR := MovePointR;
       fdirection := Standart_Direction;
-      InternalDraw;
+      pfname := fname;
     end;
-    
+    property x: integer read fx write setX;
+    property y: integer read fy;
     property MovePointL: integer read fMovePointL;
     property MovePointR: integer read fMovePointR;
-    property direction: integer read fdirection;
+    property direction: shortint read fdirection write setDirection;
   end;
   Enemies = array of Enemy;
 
@@ -54,6 +67,7 @@ begin
   
   foreach var x in level1Blocks do
   begin
+
     if (Player.Intersect(x)) AND (velocityY > 0)
     then
     begin
@@ -79,12 +93,26 @@ begin
       jumpForce := 0;
       OnGround := false;
       gravity := 1;
+
     end;
     
     if((Player.Left + Player.Width < x.Left) or (Player.Left > x.Left + x.Width)) and (OnGround = FALSE)
       then
       gravity := 1;
+    
+    if Player.Top > windowheight
+    then
+      Player.Top := 0;
   end;
+  
+  foreach var x in level1Enemies
+    do
+      begin
+        x.x += speed * x.direction;
+        if(x.x <= x.MovePointL) OR (x.x >= x.MovePointR)
+        then
+          x.direction *= -1;
+      end;  
 end;
 
 
@@ -152,6 +180,8 @@ begin
   jumpForce := -20;
   level1Enemies := new Enemy[3];
   level1Enemies[0] := new Enemy(40 * 20, 40*19, 40*17, 40*22, 'images\enemy.png');
+  level1Enemies[1] := new Enemy(40 * 17, 40*19, 40*14, 40*19, 'images\enemy.png');
+  level1Enemies[2] := new Enemy(40 * 25, 40*19, 40*22, 40*27, 'images\enemy.png');
   var GameTimer := new Timer(5, GameTick);
   GameTimer.Start();
 end;
