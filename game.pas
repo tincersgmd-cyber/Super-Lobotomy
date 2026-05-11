@@ -19,13 +19,33 @@ type
     
     procedure setX(x: integer);
     begin
+      fp.MoveTo(x, fy);
       fx := x;
-      fp.MoveTo(fx, fy);
+    end;
+    
+    function getX: integer;
+    begin
+      Result := fx;
+    end;
+    
+    function getDirection: shortint;
+    begin
+      Result := fdirection;
     end;
     
     procedure setDirection(value: shortint);
     begin
       fdirection := value;
+    end;
+    
+    function getMovePointL: integer;
+    begin
+      Result := fMovePointL;
+    end;
+    
+    function getMovePointR: integer;
+    begin
+      Result := fMovePointR;
     end;
     
   public
@@ -40,14 +60,14 @@ type
       fdirection := Standart_Direction;
       pfname := fname;
     end;
-    property x: integer read fx write setX;
+    property x: integer read getX write setX;
     property y: integer read fy;
-    property MovePointL: integer read fMovePointL;
-    property MovePointR: integer read fMovePointR;
-    property direction: shortint read fdirection write setDirection;
+    property MovePointL: integer read getMovePointR;
+    property MovePointR: integer read getMovePointL;
+    property direction: shortint read getDirection write setDirection;
   end;
   Enemies = array of Enemy;
-
+  
 var
   Flag: BOOLEAN;
   level1: Level;
@@ -58,7 +78,10 @@ var
   gravity: integer;
   jumpForce: integer;
   speed: integer;
+  EnemySpeed: integer;
   level1Enemies: Enemies;
+  level1Enemy: Enemy;
+  DebugText: TextABC;
 
 
 procedure CheckCollision();
@@ -105,14 +128,7 @@ begin
       Player.Top := 0;
   end;
   
-  foreach var x in level1Enemies
-    do
-      begin
-        x.x += speed * x.direction;
-        if(x.x <= x.MovePointL) OR (x.x >= x.MovePointR)
-        then
-          x.direction *= -1;
-      end;  
+
 end;
 
 
@@ -120,6 +136,11 @@ procedure GameTick();
 begin
   velocityY += gravity;
   player.Top += velocityY;
+  //DebugText.Text := level1Enemy.x.ToString;
+  level1Enemy.x += EnemySpeed * level1Enemy.direction;
+  if(level1Enemy.x >= level1Enemy.MovePointL) OR (level1Enemy.x <= level1Enemy.MovePointR)
+  then
+     level1Enemy.direction *= -1;
   CheckCollision();
 end;
 
@@ -178,11 +199,13 @@ begin
   speed := 5;
   gravity := 1;
   jumpForce := -20;
-  level1Enemies := new Enemy[3];
-  level1Enemies[0] := new Enemy(40 * 20, 40*19, 40*17, 40*22, 'images\enemy.png');
-  level1Enemies[1] := new Enemy(40 * 17, 40*19, 40*14, 40*19, 'images\enemy.png');
-  level1Enemies[2] := new Enemy(40 * 25, 40*19, 40*22, 40*27, 'images\enemy.png');
-  var GameTimer := new Timer(5, GameTick);
+  //level1Enemies := new Enemy[3];
+  level1Enemy := new Enemy(40 * 20, 40*19, 40*10, 40*25, 'images\enemy.png');
+  //level1Enemies[1] := new Enemy(40 * 17, 40*19, 40*14, 40*19, 'images\enemy.png');
+  //level1Enemies[2] := new Enemy(40 * 25, 40*19, 40*22, 40*27, 'images\enemy.png');
+  EnemySpeed := 2;
+  //DebugText := new TextABC(0,120,32,level1Enemy.x.ToString,clBlack);
+  var GameTimer := new Timer(10, GameTick);
   GameTimer.Start();
 end;
 
