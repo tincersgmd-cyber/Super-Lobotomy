@@ -1,42 +1,42 @@
-﻿program Game;
+﻿PROGRAM Game;
 
 USES
   GraphABC, ABCObjects, Timers;
 
-const
+CONST
   Standart_Direction = -1;
 
-type
+TYPE
   Level = ARRAY[,] OF SquareABC;
-  Blocks = array of SquareABC;
-  Enemy = class
-  private
+  Blocks = ARRAY OF SquareABC;
+  Enemy = CLASS
+  PRIVATE
     fp: PictureABC;
     fx, fy: integer;
     fMovePointL, fMovePointR: integer;
     fdirection: shortint;
     pfname: string;
     
-    procedure setX(x: integer);
-    begin
+    PROCEDURE setX(x: integer);
+    BEGIN
       fp.MoveTo(x, fy);
       fx := x;
-    end;
+    END;
     
-    function getX: integer;
-    begin
+    FUNCTION getX: integer;
+    BEGIN
       Result := fx;
-    end;
+    END;
     
-    function getDirection: shortint;
-    begin
+    FUNCTION getDirection: shortint;
+    BEGIN
       Result := fdirection;
-    end;
+    END;
     
-    procedure setDirection(value: shortint);
-    begin
+    PROCEDURE setDirection(value: shortint);
+    BEGIN
       fdirection := value;
-    end;
+    END;
     
     function getMovePointL: integer;
     begin
@@ -103,8 +103,10 @@ var
   GameTimer: Timer;
   score: word;
   highscore: Text;
+  scoreText: TextABC;
+  
 
-procedure CheckCollision();
+procedure CheckCollision(t: TIMER);
 begin
   OnGround := false;
   if Player.Top > windowheight
@@ -124,6 +126,40 @@ begin
     Player.MoveTo(WindowWidth - Player.Width, Player.Top);  
     PlayerDirection *= -1;
   end;
+  
+  if (Player.Intersect(level1Enemy.collider)) AND (velocityY <> 0)
+  then
+    begin
+      level1Enemy.Destroy;
+      score += 100;
+      sleep(100);
+      t.Stop;
+      assign(highscore,'Player_Data\Player__highscore.txt');
+      REWRITE(highscore);
+      WRITE(highscore, score);
+      CLOSE(highscore);
+      Window.Load('images\FinalBackground.png');
+      VAR EndText := new TextABC(WindowWidth DIV 2, WindowHeight DIV 2, 72, $'You Win! highscore: {score}', clGreen);
+      EndText.MoveTo(WindowWidth DIV 2 - EndText.Width DIV 2, WindowHeight DIV 2 - EndText.Height DIV 2);
+      EndText.TransparentBackground := TRUE;
+      VAR txt := new TextABC(WindowWidth DIV 3, WindowHeight DIV 2 + 200, 32, 'leave to restart', clGreen);
+      txt.TransparentBackground := TRUE;
+    end;
+  
+  if (Player.Intersect(level1Enemy.collider)) AND (velocityY = 0)
+  then
+    begin
+      assign(highscore,'Player_Data\Player__highscore.txt');
+      RESET(highscore);
+      READLN(highscore,score);
+      CLOSE(highscore);
+      ClearWindow(clBlack);
+      VAR EndText := new TextABC(WindowWidth DIV 2, WindowHeight DIV 2, 72, $'YOU DIED highscore: {score}', clRed);
+      EndText.MoveTo(WindowWidth DIV 2 - EndText.Width DIV 2, WindowHeight DIV 2 - EndText.Height DIV 2);
+      EndText.TransparentBackground := TRUE;
+      VAR txt := new TextABC(WindowWidth DIV 3, WindowHeight DIV 2 + 200, 32, 'leave to restart', clRed);
+      txt.TransparentBackground := TRUE;
+    end;
   
   foreach var x in level1Blocks do
   begin
@@ -173,7 +209,8 @@ begin
   then
     level1Enemy.direction *= -1;
   score += 1;
-  CheckCollision();
+  scoreText.Text := $'Score: {score}';
+  CheckCollision(GameTimer);
 end;
 
 procedure PlayerJump();
@@ -240,6 +277,7 @@ begin
   //DebugText := new TextABC(0,120,32,level1Enemy.x.ToString,clBlack);
   GameTimer := new Timer(10, GameTick);
   GameTimer.Start();
+  scoreText:= new TextABC(20,120, 40,$'Score: {score}', clWhite);
 end;
 
 procedure BackgroundChange();
@@ -260,9 +298,9 @@ begin
   end;
 end;
 
-procedure KeyDown(Key: INTEGER);
-begin
-  case KEY OF
+PROCEDURE KeyDown(Key: INTEGER);
+BEGIN
+  CASE KEY OF
     VK_F4:
       begin
         SLEEP(100);
@@ -279,12 +317,12 @@ begin
         Flag := TRUE;
         Window.Clear(RGB(0, 162, 232));
         GameStart();
-      end;
-  end;
-end;
+      END;
+  END;
+END;
 
-procedure GameEnd;
-begin
+PROCEDURE GameEnd;
+BEGIN
   OnKeyDown := nil;
   GameTimer.Stop();
   Level1Enemy.Destroy;
@@ -295,11 +333,12 @@ begin
   Flag := TRUE;
   OnKeyDown := KeyDown;
   BackgroundChange();
-end;
+END;
 
-begin
-  Window.Maximize();
+BEGIN
+  SetWindowSize(1920, 1080);
+  Window.CenterOnScreen;
+  SetWindowCaption('Super Lobotomy');
   OnKeyDown := KeyDown;
   BackgroundChange();
-  
-end.
+END.
