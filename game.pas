@@ -1,7 +1,7 @@
 ﻿PROGRAM Game;
-
+{$reference 'PresentationCore.dll'}
 USES
-  GraphABC, ABCObjects, Timers;
+  GraphABC, ABCObjects, Timers, System.Windows.Media, System.IO;
 
 CONST
   Standart_Direction = -1;
@@ -134,12 +134,22 @@ begin
       score += 100;
       sleep(100);
       t.Stop;
+      VAR hScore: INTEGER;
+      assign(highscore,'Player_Data\Player__highscore.txt');
+      Reset(highscore);
+      Read(highscore, hScore);
+      Close(highscore);
       assign(highscore,'Player_Data\Player__highscore.txt');
       REWRITE(highscore);
-      WRITE(highscore, score);
+      IF score > hScore
+      THEN
+        begin
+          WRITE(highscore, score);
+          hScore := score;
+        end; 
       CLOSE(highscore);
       Window.Load('images\FinalBackground.png');
-      VAR EndText := new TextABC(WindowWidth DIV 2, WindowHeight DIV 2, 72, $'You Win! highscore: {score}', clGreen);
+      VAR EndText := new TextABC(WindowWidth DIV 2, WindowHeight DIV 2, 72, $'You Win! highscore: {hScore}', clGreen);
       EndText.MoveTo(WindowWidth DIV 2 - EndText.Width DIV 2, WindowHeight DIV 2 - EndText.Height DIV 2);
       EndText.TransparentBackground := TRUE;
       VAR txt := new TextABC(WindowWidth DIV 3, WindowHeight DIV 2 + 200, 32, 'leave to restart', clGreen);
@@ -149,12 +159,13 @@ begin
   if (Player.Intersect(level1Enemy.collider)) AND (velocityY = 0)
   then
     begin
+      t.Stop;
       assign(highscore,'Player_Data\Player__highscore.txt');
       RESET(highscore);
       READLN(highscore,score);
       CLOSE(highscore);
       ClearWindow(clBlack);
-      VAR EndText := new TextABC(WindowWidth DIV 2, WindowHeight DIV 2, 72, $'YOU DIED highscore: {score}', clRed);
+      VAR EndText := new TextABC(WindowWidth DIV 2, WindowHeight DIV 2, 72, $'YOU DIED {Chr(10)} highscore: {score}', clRed);
       EndText.MoveTo(WindowWidth DIV 2 - EndText.Width DIV 2, WindowHeight DIV 2 - EndText.Height DIV 2);
       EndText.TransparentBackground := TRUE;
       VAR txt := new TextABC(WindowWidth DIV 3, WindowHeight DIV 2 + 200, 32, 'leave to restart', clRed);
@@ -283,6 +294,7 @@ end;
 procedure BackgroundChange();
 begin
   var Counter := 1;
+  
   while TRUE
   DO
   begin
@@ -300,6 +312,7 @@ end;
 
 PROCEDURE KeyDown(Key: INTEGER);
 BEGIN
+  
   CASE KEY OF
     VK_F4:
       begin
@@ -318,6 +331,16 @@ BEGIN
         Window.Clear(RGB(0, 162, 232));
         GameStart();
       END;
+    VK_Tab:
+      begin
+        OnKeyDown := nil;
+        Flag := TRUE;
+        SetWindowCaption('FireInTheHole.exe');
+        Window.Load('images\FireInTheHole.exe.png');
+        VAR sound := new MediaPlayer;
+        sound.Open(new System.Uri(Directory.GetCurrentDirectory + '\sounds\IAMGOD.mp3', System.UriKind.Absolute));
+        sound.Play();
+      end;
   END;
 END;
 
